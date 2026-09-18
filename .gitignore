@@ -110,3 +110,31 @@ InitTestScene*.unity*
 
 # Raw connectome downloads (GBs) stay out of git; processed subset goes in Assets/Data
 Data/raw/
+/Assets/Screenshots/
+/Assets/Screenshots.meta
+/Results/
+/Videos/
+
+# --- FlyWireSwat: large third-party binaries are re-downloadable (Tools/fetch_assets.sh); keep .meta files so GUIDs stay stable
+Assets/ThirdParty/PolyHaven/Models/**/*.fbx
+Assets/ThirdParty/PolyHaven/Models/**/*.jpg
+Assets/ThirdParty/PolyHaven/Models/**/*.png
+Assets/ThirdParty/PolyHaven/Models/**/*.exr
+Assets/ThirdParty/PolyHaven/Textures/**/*.jpg
+Assets/ThirdParty/PolyHaven/Textures/**/*.png
+Assets/ThirdParty/PolyHaven/HDRIs/*.hdr
+Assets/ThirdParty/Kenney/BlasterKit/Models/
+Assets/ThirdParty/Kenney/BlasterKit/Preview.png
+Assets/ThirdParty/Fonts/*.ttf
+Assets/Resources/Fonts/*.ttf
+Assets/Resources/Models/*.fbx
+Assets/Screenshots/
+Assets/Screenshots.meta
+/Results/*.csv
+/Results/*.json
+!/Results/leaderboard_latest.json
+!/Results/repellents_latest.csv
+!/Results/repellents_latest.json
+/Videos/
+/Build/
+/Data/raw/
