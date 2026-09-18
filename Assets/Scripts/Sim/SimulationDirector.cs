@@ -85,6 +85,8 @@ namespace FlyWireSwat.Sim
         void Start()
         {
             Application.targetFrameRate = targetFrameRate;
+            Application.runInBackground = true;   // recordings must not stall when the window loses focus
+            if (Screen.height > Screen.width) ShowLeaderboard = false;
             QualitySettings.vSyncCount = 1;
             if (weapons == null || weapons.Count == 0) weapons = WeaponLibrary.CreateDefaults();
             if (repellents == null || repellents.Count == 0) repellents = WeaponLibrary.CreateRepellents();
@@ -105,7 +107,7 @@ namespace FlyWireSwat.Sim
                 if (a == "-record") { startMode = StartMode.RecordVideos; quitAfterRecording = true; }
                 else if (a == "-fps") startMode = StartMode.Fps;
                 else if (a == "-showcase") startMode = StartMode.Showcase;
-                else if (a == "-portrait") Screen.SetResolution(1080, 1920, false);
+                else if (a == "-portrait") { Screen.SetResolution(1080, 1920, false); ShowLeaderboard = false; }
                 else if (a == "-landscape") Screen.SetResolution(1920, 1080, false);
                 else if (a == "-tr") L10n.SetLang("tr");
                 else if (a == "-en") L10n.SetLang("en");

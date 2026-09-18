@@ -47,15 +47,15 @@ namespace FlyWireSwat.Sim
         {
             switch (k)
             {
-                case NeuronKind.LC4: return "LC4 (hız)";
-                case NeuronKind.LPLC2: return "LPLC2 (boyut)";
+                case NeuronKind.LC4: return L10n.Pick("LC4 (velocity)", "LC4 (hız)");
+                case NeuronKind.LPLC2: return L10n.Pick("LPLC2 (size)", "LPLC2 (boyut)");
                 case NeuronKind.LPLC1: return "LPLC1";
                 case NeuronKind.LC6: return "LC6";
                 case NeuronKind.LC16: return "LC16";
                 case NeuronKind.LC22: return "LC22";
                 case NeuronKind.LC15: return "LC15";
                 case NeuronKind.GF: return "GF (DNp01)";
-                default: return k >= NeuronKind.GF ? "DNp02/04/06/11" : "ara nöronlar";
+                default: return k >= NeuronKind.GF ? "DNp02/04/06/11" : L10n.Pick("interneurons", "ara nöronlar");
             }
         }
 

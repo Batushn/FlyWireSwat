@@ -88,13 +88,24 @@ namespace FlyWireSwat.Sim
             float t = d.Showcase.ReplayMs;
             float m = 10f * s;
 
-            // ---------- weapon card (top-left)
+            // ---------- weapon card (top-left; full width and compact in portrait)
             float cardW = portrait ? W - 2 * m : 430f * s;
-            var card = new Rect(m, m, cardW, (w.IsKiller ? 215f : 150f) * s);
+            var card = new Rect(m, m, cardW, (portrait ? (w.IsKiller ? 178f : 140f) : (w.IsKiller ? 215f : 150f)) * s);
             UiTheme.Panel_(card);
             var title = UiTheme.Sized(UiTheme.Title, s); var body = UiTheme.Sized(UiTheme.Body, s); var mono = UiTheme.Sized(UiTheme.Mono, s); var small = UiTheme.Sized(UiTheme.Small, s);
             GUI.Label(new Rect(card.x + 14 * s, card.y + 8 * s, card.width - 28 * s, 34 * s), $"{Emo(w.emoji + "  ")}{w.displayName}   <size={Mathf.RoundToInt(14 * s)}><color=#aaa>[{d.ShowcaseIndex + 1}/{d.AllItems.Count}]</color></size>", title);
             GUI.Label(new Rect(card.x + 14 * s, card.y + 44 * s, card.width - 28 * s, 40 * s), w.description, body);
+            // rank badge (right side of the card) - the only table info shown in portrait
+            {
+                string badge = null; Color bc = UiTheme.Accent;
+                if (w.IsKiller) { int ri = d.Leaderboard.FindIndex(x => x.weapon == w); if (ri >= 0) { var st = d.Leaderboard[ri]; badge = $"#{ri + 1}/{d.Leaderboard.Count}\n<size={Mathf.RoundToInt(13 * s)}>{L10n.T("lb.h.score")} {st.score:0.0}  ·  {L10n.T("lb.h.kill")} {st.killRate * 100f:0}%</size>"; bc = ri == 0 ? UiTheme.Accent : Color.white; } }
+                else { int ri = d.RepellentBoard.FindIndex(x => x.item == w); if (ri >= 0) { var st = d.RepellentBoard[ri]; badge = $"#{ri + 1}/{d.RepellentBoard.Count}\n<size={Mathf.RoundToInt(13 * s)}>{VerdictText(st.verdict)}</size>"; } }
+                if (badge != null)
+                {
+                    var bs = new GUIStyle(UiTheme.Sized(UiTheme.H2, s)) { alignment = TextAnchor.UpperRight, normal = { textColor = bc } };
+                    GUI.Label(new Rect(card.xMax - 230 * s, card.y + 8 * s, 216 * s, 60 * s), badge, bs);
+                }
+            }
 
             if (w.IsKiller)
             {
@@ -110,13 +121,18 @@ namespace FlyWireSwat.Sim
                 string tk = res.decision.takeoffMs >= 0f ? $"{res.decision.takeoffMs:0.0} ms" : "-";
                 string outcome = res.killed ? UiTheme.Color_("<b>" + L10n.T("res.dead") + "</b>", UiTheme.Bad) : (res.inLethalZone ? UiTheme.Color_(L10n.T("res.hit"), UiTheme.Accent) : UiTheme.Color_("<b>" + L10n.T("res.escaped") + "</b>", UiTheme.Good));
                 if (w.stimulusKind == StimulusKind.Passive) outcome = UiTheme.Color_(L10n.T("res.waiting"), UiTheme.Muted);
-                GUI.Label(new Rect(card.x + 14 * s, card.y + 86 * s, card.width - 28 * s, 130 * s),
-                    string.Format(L10n.T("hud.time"), t, d.replayTimeScale) + "\n" +
-                    string.Format(L10n.T("hud.approach"), st.azimuthDeg, lv, res.impactMs) + "\n" +
-                    string.Format(L10n.T("hud.gf"), gf) + "\n" +
-                    string.Format(L10n.T("hud.takeoff"), tk, mode) + "\n" +
-                    string.Format(L10n.T("hud.dist"), res.distanceToImpact * 100f, w.lethalRadius * 100f) + "\n" +
-                    string.Format(L10n.T("hud.result"), outcome, res.killProbability), mono);
+                string tele = portrait
+                    ? string.Format(L10n.T("hud.time"), t, d.replayTimeScale) + "   l/v = " + $"{lv:0.0} ms" + "\n" +
+                      string.Format(L10n.T("hud.gf"), gf) + "\n" +
+                      string.Format(L10n.T("hud.takeoff"), tk, mode) + "\n" +
+                      string.Format(L10n.T("hud.result"), outcome, res.killProbability)
+                    : string.Format(L10n.T("hud.time"), t, d.replayTimeScale) + "\n" +
+                      string.Format(L10n.T("hud.approach"), st.azimuthDeg, lv, res.impactMs) + "\n" +
+                      string.Format(L10n.T("hud.gf"), gf) + "\n" +
+                      string.Format(L10n.T("hud.takeoff"), tk, mode) + "\n" +
+                      string.Format(L10n.T("hud.dist"), res.distanceToImpact * 100f, w.lethalRadius * 100f) + "\n" +
+                      string.Format(L10n.T("hud.result"), outcome, res.killProbability);
+                GUI.Label(new Rect(card.x + 14 * s, card.y + 86 * s, card.width - 28 * s, 130 * s), tele, mono);
             }
             else
             {
@@ -131,28 +147,28 @@ namespace FlyWireSwat.Sim
             if (w.IsKiller && res.decision.gfSpikeMs >= 0f && t >= res.decision.gfSpikeMs && t < res.decision.gfSpikeMs + 60f)
             {
                 GUI.color = new Color(1f, 0.3f, 0.2f, 1f - (t - res.decision.gfSpikeMs) / 60f);
-                GUI.Label(new Rect(0, H * (portrait ? 0.3f : 0.14f), W, 60 * s), Emo("⚡ ") + L10n.T("gf.flash") + Emo(" ⚡"), big);
+                GUI.Label(new Rect(0, H * (portrait ? 0.42f : 0.14f), W, 60 * s), Emo("⚡ ") + L10n.T("gf.flash") + Emo(" ⚡"), big);
                 GUI.color = Color.white;
             }
             if (w.IsKiller && t >= res.impactMs && t < res.impactMs + 400f && w.stimulusKind != StimulusKind.Passive)
             {
                 GUI.color = res.killed ? UiTheme.Bad : UiTheme.Good;
-                GUI.Label(new Rect(0, H * (portrait ? 0.36f : 0.22f), W, 60 * s), res.killed ? L10n.T("splat") : L10n.T("miss"), big);
+                GUI.Label(new Rect(0, H * (portrait ? 0.5f : 0.22f), W, 60 * s), res.killed ? L10n.T("splat") : L10n.T("miss"), big);
                 GUI.color = Color.white;
             }
             if (!w.IsKiller && d.RepellentVerdictFlash > 0f)
             {
                 GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(d.RepellentVerdictFlash));
-                GUI.Label(new Rect(0, H * (portrait ? 0.34f : 0.2f), W, 60 * s), d.RepellentVerdictText, big);
+                GUI.Label(new Rect(0, H * (portrait ? 0.46f : 0.2f), W, 60 * s), d.RepellentVerdictText, big);
                 GUI.color = Color.white;
             }
 
             // ---------- recording badge
             if (d.Recorder != null && d.Recorder.IsRecording)
             {
-                var r = new Rect(W * 0.5f - 260 * s, m, 520 * s, 30 * s);
+                var r = portrait ? new Rect(W - 130 * s - m, card.yMax + 6 * s, 130 * s, 26 * s) : new Rect(W * 0.5f - 260 * s, m, 520 * s, 30 * s);
                 UiTheme.Panel_(r, 0.85f);
-                GUI.Label(new Rect(r.x + 10 * s, r.y + 4 * s, r.width, 24 * s), UiTheme.Color_("● ", UiTheme.Bad) + string.Format(L10n.T("rec"), d.Recorder.Status), small);
+                GUI.Label(new Rect(r.x + 10 * s, r.y + 4 * s, r.width, 24 * s), UiTheme.Color_("● ", UiTheme.Bad) + (portrait ? "REC" : string.Format(L10n.T("rec"), d.Recorder.Status)), small);
             }
 
             // ---------- tables (right column in landscape, below the card in portrait)
@@ -162,17 +178,17 @@ namespace FlyWireSwat.Sim
             if (d.ShowLeaderboard)
             {
                 float y = DrawLeaderboard(new Rect(tableX, tableY, tableW, 0), s, w, portrait);
-                if (!portrait || H > 1500) DrawRepellentBoard(new Rect(tableX, y + m, tableW, 0), s, w);
+                DrawRepellentBoard(new Rect(tableX, y + m, tableW, 0), s, w);
             }
 
             // ---------- bottom: spike strips + brain PiP
             float rh = 15f * s;
             float stripsH = rh * RasterKinds.Length + 40 * s;
-            float pipW = portrait ? W - 2 * m : Mathf.Min(520f * s, W * 0.32f), pipH = pipW * 0.6f;
+            float pipW = portrait ? W * 0.62f : Mathf.Min(520f * s, W * 0.32f), pipH = pipW * 0.6f;
             if (d.ShowBrain && d.BrainTexture != null)
             {
-                float px = portrait ? m : W - pipW - m;
-                float py = H - pipH - m - (portrait ? stripsH + m : 0f);
+                float px = portrait ? W - pipW - m : W - pipW - m;
+                float py = H - pipH - m;
                 var pr = new Rect(px - 6 * s, py - 24 * s, pipW + 12 * s, pipH + 30 * s);
                 UiTheme.Panel_(pr, 0.8f);
                 GUI.Label(new Rect(px, py - 22 * s, pipW, 20 * s), L10n.T("brain.pip"), small);
@@ -180,11 +196,11 @@ namespace FlyWireSwat.Sim
             }
             if (d.ShowBrain && _raster != null && w.IsKiller && w.stimulusKind != StimulusKind.Passive)
             {
-                float labelW = 120f * s, stripW = portrait ? W - 2 * m - labelW - 16 * s : Mathf.Min(W * 0.48f, W - pipW - labelW - 4 * m);
+                float labelW = portrait ? 0f : 120f * s, stripW = portrait ? W - pipW - 3 * m - 16 * s : Mathf.Min(W * 0.48f, W - pipW - labelW - 4 * m);
                 float y0 = H - m - rh * RasterKinds.Length;
                 UiTheme.Panel_(new Rect(m, y0 - 26 * s, labelW + stripW + 16 * s, rh * RasterKinds.Length + 34 * s));
                 GUI.Label(new Rect(m + 8 * s, y0 - 24 * s, 600 * s, 20 * s), L10n.T("raster"), small);
-                for (int r = 0; r < RasterKinds.Length; r++)
+                if (!portrait) for (int r = 0; r < RasterKinds.Length; r++)
                     GUI.Label(new Rect(m + 8 * s, y0 + (RasterKinds.Length - 1 - r) * rh - 2, labelW, rh + 4), BrainView.KindLabel(RasterKinds[r]), small);
                 var stripRect = new Rect(m + 8 * s + labelW, y0, stripW, rh * RasterKinds.Length);
                 GUI.DrawTexture(stripRect, _raster, ScaleMode.StretchToFill);

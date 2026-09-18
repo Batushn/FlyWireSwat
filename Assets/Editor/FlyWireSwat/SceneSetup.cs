@@ -59,7 +59,7 @@ namespace FlyWireSwat.EditorTools
             var opts = new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/Scenes/FlyWireSwat.unity" },
-                locationPathName = "Build/Linux/FlyWireSwat.x86_64",
+                locationPathName = EditorPrefs.GetString("FlyWireSwat.BuildDir", "Build/Linux") + "/FlyWireSwat.x86_64",
                 target = BuildTarget.StandaloneLinux64,
                 options = BuildOptions.None,
             };

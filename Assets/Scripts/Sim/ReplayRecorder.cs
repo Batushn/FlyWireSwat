@@ -19,6 +19,7 @@ namespace FlyWireSwat.Sim
         public float secondsPerWeapon = 12f;
         public string ffmpegPath = "ffmpeg";
         public bool quitWhenDone;
+        Texture2D _readback;
         public bool IsRecording { get; private set; }
         public string Status { get; private set; } = "";
 
@@ -39,7 +40,6 @@ namespace FlyWireSwat.Sim
             IsRecording = true;
             var made = new List<string>();
             var rt = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-            var tex = new Texture2D(Screen.width, Screen.height, TextureFormat.RGBA32, false);
             string outDir = Path.Combine(VideoDirectory, Screen.height > Screen.width ? "portrait" : "landscape");
             Directory.CreateDirectory(outDir);
             string framesRoot = Path.Combine(outDir, "frames");
@@ -56,6 +56,7 @@ namespace FlyWireSwat.Sim
                 director.Showcase.Playing = false;
                 float replayStep = 1000f / fps * director.replayTimeScale;   // ms of sim time per video frame
                 int frames = Mathf.CeilToInt(secondsPerWeapon * fps);
+                int width = rt.width, height = rt.height;
                 for (int f = 0; f < frames; f++)
                 {
                     Status = string.Format(L10n.T("rec.status"), w.displayName, wi + 1, items.Count, f + 1, frames);
@@ -63,18 +64,18 @@ namespace FlyWireSwat.Sim
                     director.SyncBrainToReplay();
                     yield return new WaitForEndOfFrame();
                     ScreenCapture.CaptureScreenshotIntoRenderTexture(rt);
-                    var prev = RenderTexture.active;
-                    RenderTexture.active = rt;
-                    tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-                    tex.Apply(false);
+                    // readback + JPEG (q92) on the main thread: ~15 ms per 1080p frame, no threading surprises
+                    if (_readback == null || _readback.width != width || _readback.height != height) _readback = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                    var prev = RenderTexture.active; RenderTexture.active = rt;
+                    _readback.ReadPixels(new Rect(0, 0, width, height), 0, 0, false);
                     RenderTexture.active = prev;
-                    File.WriteAllBytes(Path.Combine(frameDir, f.ToString("D5") + ".png"), tex.EncodeToPNG());
+                    File.WriteAllBytes(Path.Combine(frameDir, f.ToString("D5") + ".jpg"), _readback.EncodeToJPG(92));
                     if (w.IsKiller && director.Showcase.Finished && f > frames / 2) break;
                     if (!w.IsKiller && director.Showcase.RepellentDecided && f > frames * 0.55f) break;
                 }
                 string mp4 = Path.Combine(outDir, $"{wi:00}_{safe}.mp4");
                 Status = $"ffmpeg: {safe}";
-                yield return RunFfmpeg($"-y -framerate {fps} -i \"{Path.Combine(frameDir, "%05d.png")}\" -vf \"format=yuv420p\" -c:v libx264 -crf 18 -preset medium \"{mp4}\"");
+                yield return RunFfmpeg($"-y -framerate {fps} -i \"{Path.Combine(frameDir, "%05d.jpg")}\" -vf \"format=yuv420p\" -c:v libx264 -crf 18 -preset medium \"{mp4}\"");
                 if (File.Exists(mp4)) { made.Add(mp4); Directory.Delete(frameDir, true); }
             }
             if (made.Count > 0)
@@ -84,7 +85,7 @@ namespace FlyWireSwat.Sim
                 yield return RunFfmpeg($"-y -f concat -safe 0 -i \"{list}\" -c copy \"{Path.Combine(outDir, "all_weapons.mp4")}\"");
             }
             director.Showcase.Playing = true;
-            Object.Destroy(rt); Object.Destroy(tex);
+            Object.Destroy(rt);
             Status = string.Format(L10n.T("rec.done"), outDir);
             Debug.Log("[FlyWireSwat] " + Status);
             IsRecording = false;

@@ -16,7 +16,7 @@ namespace FlyWireSwat.Sim
         public static readonly Color Muted = new Color(0.72f, 0.74f, 0.8f);
 
         /// <summary>Scale factor so the HUD reads the same on 720p, 1080p and portrait 1080x1920.</summary>
-        public static float S => Mathf.Clamp(Mathf.Min(Screen.width, Screen.height) / 1080f * (Screen.height > Screen.width ? 1.35f : 1.0f), 0.6f, 2.2f);
+        public static float S => Mathf.Clamp(Mathf.Min(Screen.width, Screen.height) / 1080f * (Screen.height > Screen.width ? 1.15f : 1.0f), 0.6f, 2.2f);
         public static bool Portrait => Screen.height > Screen.width;
 
         public static void Ensure()
