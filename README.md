@@ -14,8 +14,14 @@ in real time.
 *Türkçe özet için aşağı kaydır → [Türkçe](#türkçe).*
 
 <p align="center">
-  <img src="docs/media/showcase_swatter.gif" width="48%" alt="slow-motion swatter replay with live neuron activity">
-  <img src="docs/media/fps.gif" width="48%" alt="first-person mode">
+  <img src="docs/media/showcase_swatter.gif" width="49%" alt="slow-motion swatter replay with live neuron activity">
+  <img src="docs/media/showcase_bazooka.gif" width="49%" alt="the bazooka: the only weapon the fly never sees">
+</p>
+<p align="center">
+  <img src="docs/media/repellent_uv.gif" width="24%" alt="UV zapper attracts and kills">
+  <img src="docs/media/repellent_waterbag.gif" width="24%" alt="water bag myth: the fly lands anyway">
+  <img src="docs/media/portrait_swatter.gif" width="24%" alt="portrait video output">
+  <img src="docs/media/fps.jpg" width="26%" alt="first-person kitchen">
 </p>
 
 ## Results (150 trials per weapon, 30-minute budget)

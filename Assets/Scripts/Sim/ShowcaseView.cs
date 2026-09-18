@@ -48,7 +48,7 @@ namespace FlyWireSwat.Sim
             cloudFx.name = "CloudFx";
             Destroy(cloudFx.GetComponent<Collider>());
             cloudFx.SetParent(transform, false);
-            _cloudMat = MakeTransparent(new Color(0.6f, 1f, 0.6f, 0.25f));
+            _cloudMat = Fx.UnlitTransparent(new Color(0.75f, 1f, 0.75f, 0.18f));
             cloudFx.GetComponent<Renderer>().sharedMaterial = _cloudMat;
             cloudFx.gameObject.SetActive(false);
         }
@@ -95,7 +95,11 @@ namespace FlyWireSwat.Sim
         }
 
         /// <summary>Advance the replay by a fixed amount of simulated time (used by the video recorder).</summary>
-        public void Step(float ms) { ReplayMs = Mathf.Min(_replayEndMs, ReplayMs + ms); Apply(ReplayMs); }
+        public void Step(float ms)
+        {
+            if (_repel != null) { UpdateRepellent(ms * 0.001f / Mathf.Max(0.001f, TimeScale)); return; }
+            ReplayMs = Mathf.Min(_replayEndMs, ReplayMs + ms); Apply(ReplayMs);
+        }
 
         GameObject _repelItem;
         WeaponDefinition _repel;
@@ -121,6 +125,9 @@ namespace FlyWireSwat.Sim
             if (item.lightColor.a > 0f) { var l = new GameObject("UV").AddComponent<Light>(); l.transform.SetParent(_repelItem.transform, false); l.transform.localPosition = new Vector3(0f, 0.16f, 0f); l.type = LightType.Point; l.color = item.lightColor; l.intensity = 0.9f; l.range = 0.7f; }
             impactFx.gameObject.SetActive(false); cloudFx.gameObject.SetActive(false);
             fly.ResetVisual();
+            float zr = item.attractStrength > 0f ? item.attractRadius : item.repelRadius;
+            var zc = item.attractStrength > 0f ? new Color(0.75f, 0.45f, 1f, 0.10f) : item.repelStrength > 0.05f ? new Color(0.45f, 1f, 0.6f, 0.10f) : new Color(0.7f, 0.7f, 0.7f, 0.06f);
+            Fx.ZoneDome(_repelItem.transform, zr, zc);
             _repelDecided = false; _repelT = 0f;
             _repelVeer = _repelRng.NextDouble() < protection;
             _repelKill = !_repelVeer && item.killsOnContact && _repelRng.NextDouble() < Mathf.Clamp01(killChance);
@@ -132,10 +139,10 @@ namespace FlyWireSwat.Sim
             _replayStartMs = 0f; _replayEndMs = 5000f; ReplayMs = 0f;
         }
 
-        void UpdateRepellent()
+        void UpdateRepellent(float dtSeconds)
         {
             if (_repel == null) return;
-            _repelT += Time.unscaledDeltaTime * (Playing ? 1f : 0f);
+            _repelT += dtSeconds;
             ReplayMs = _repelT * 1000f;
             float u = Mathf.Clamp01(_repelT / 2.2f);
             Vector3 p;
@@ -171,7 +178,7 @@ namespace FlyWireSwat.Sim
 
         void Update()
         {
-            if (_repel != null) { UpdateRepellent(); return; }
+            if (_repel != null) { if (Playing) UpdateRepellent(Time.unscaledDeltaTime); return; }
             if (_weaponGo == null) return;
             if (Playing && ReplayMs < _replayEndMs)
             {
@@ -190,7 +197,7 @@ namespace FlyWireSwat.Sim
             // weapon
             if (s.kind == StimulusKind.ExpandingCloud)
             {
-                if (!_sprayShown && t >= 0f) { _sprayShown = true; ProceduralSfx.Play(ProceduralSfx.Spray, 0.7f); }
+                if (!_sprayShown && t >= 0f) { _sprayShown = true; ProceduralSfx.Play(ProceduralSfx.Spray, 0.7f); Fx.SprayCloud(transform.TransformPoint(dir * (s.startDistance + 0.05f)), -dir, 1.5f); }
                 float r = LoomGeometry.ObjectRadius(s, tt);
                 cloudFx.localPosition = dir * s.startDistance;
                 cloudFx.localScale = Vector3.one * r * 2f;

@@ -49,6 +49,8 @@ namespace FlyWireSwat.Sim
                 var w = items[wi];
                 string safe = Sanitize(w.id);
                 string frameDir = Path.Combine(framesRoot, $"{wi:00}_{safe}");
+                string existing = Path.Combine(outDir, $"{wi:00}_{safe}.mp4");
+                if (File.Exists(existing)) { made.Add(existing); continue; }   // resume: keep clips already rendered
                 if (Directory.Exists(frameDir)) Directory.Delete(frameDir, true);
                 Directory.CreateDirectory(frameDir);
 

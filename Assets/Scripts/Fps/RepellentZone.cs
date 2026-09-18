@@ -23,6 +23,9 @@ namespace FlyWireSwat.Fps
                 _light.transform.SetParent(transform, false); _light.transform.localPosition = new Vector3(0f, 0.16f, 0f);
                 _light.type = LightType.Point; _light.color = def.lightColor; _light.intensity = 1.6f; _light.range = 1.4f;
             }
+            float zr = def.attractStrength > 0f ? def.attractRadius : def.repelRadius;
+            var zc = def.attractStrength > 0f ? new Color(0.75f, 0.45f, 1f, 0.08f) : def.repelStrength > 0.05f ? new Color(0.45f, 1f, 0.6f, 0.08f) : new Color(0.7f, 0.7f, 0.7f, 0.05f);
+            Fx.ZoneDome(transform, zr, zc);
             if (def.emitsSmoke) Fx.Smoke(transform, new Vector3(0f, 0.03f, 0f), new Color(0.6f, 0.6f, 0.6f, 0.4f), 0.03f, 2.5f, 12f, 0.12f);
         }
 

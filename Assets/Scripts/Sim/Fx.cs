@@ -193,15 +193,54 @@ namespace FlyWireSwat.Sim
             return ps;
         }
 
+        /// <summary>Unlit, alpha-blended, double-sided material for scent clouds and range domes (independent of scene lighting).</summary>
+        public static Material UnlitTransparent(Color c)
+        {
+            var m = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+            m.SetColor("_BaseColor", c); m.color = c;
+            m.SetFloat("_Surface", 1); m.SetFloat("_Blend", 0);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0); m.SetFloat("_Cull", 0);
+            m.renderQueue = 3000;
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            return m;
+        }
+
+        /// <summary>Faint dome showing a repellent's / attractant's range. Parent it to the item; caller destroys it.</summary>
+        public static GameObject ZoneDome(Transform parent, float radius, Color c)
+        {
+            var g = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            g.name = "ZoneDome";
+            Object.Destroy(g.GetComponent<Collider>());
+            g.transform.SetParent(parent, false);
+            g.transform.localPosition = Vector3.zero;
+            g.transform.localScale = new Vector3(radius * 2f, radius * 1.2f, radius * 2f);
+            var r = g.GetComponent<Renderer>();
+            r.sharedMaterial = UnlitTransparent(c);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            g.AddComponent<DomePulse>();
+            return g;
+        }
+
         public static GameObject GlowSphere(Vector3 p, float radius, Color c, float seconds)
         {
             var g = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             Object.Destroy(g.GetComponent<Collider>());
             g.transform.position = p; g.transform.localScale = Vector3.one * radius * 2f;
-            g.GetComponent<Renderer>().sharedMaterial = ShowcaseView.MakeTransparent(c);
+            g.GetComponent<Renderer>().sharedMaterial = UnlitTransparent(c);
             Object.Destroy(g, seconds);
             return g;
         }
+    }
+
+    public class DomePulse : MonoBehaviour
+    {
+        Material _m; Color _c;
+        void Start() { _m = GetComponent<Renderer>().material; _c = _m.color; }
+        void Update() { if (_m == null) return; var c = _c; c.a = _c.a * (0.75f + 0.25f * Mathf.Sin(Time.time * 1.5f)); _m.SetColor("_BaseColor", c); _m.color = c; }
     }
 
     public class FadeAndDie : MonoBehaviour
